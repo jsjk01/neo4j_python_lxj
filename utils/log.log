@@ -1,0 +1,12 @@
+2021-04-19 17:18:48 log.py [line:64] INFO: 状态信息
+2021-04-19 17:18:48 log.py [line:65] WARNING: 警告信息
+2021-04-19 17:18:48 log.py [line:66] CRITICAL: 严重错误信息
+2021-04-19 17:19:10 log.py [line:64] INFO: 状态信息
+2021-04-19 17:19:10 log.py [line:65] WARNING: 警告信息
+2021-04-19 17:19:10 log.py [line:66] ERROR: 错误信息
+2021-04-19 17:19:10 log.py [line:67] CRITICAL: 严重错误信息
+2021-04-19 17:30:46 log.py [line:61] DEBUG: 调试信息
+2021-04-19 17:30:46 log.py [line:62] INFO: 状态信息
+2021-04-19 17:30:46 log.py [line:63] WARNING: 警告信息
+2021-04-19 17:30:46 log.py [line:64] ERROR: 错误信息
+2021-04-19 17:30:46 log.py [line:65] CRITICAL: 严重错误信息
