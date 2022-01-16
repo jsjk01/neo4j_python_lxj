@@ -40,9 +40,9 @@ class App:
         # To learn more about the Cypher syntax, see https://neo4j.com/docs/cypher-manual/current/
         # The Reference Card is also a good resource for keywords https://neo4j.com/docs/cypher-refcard/current/
         query = (
-            "CREATE (p1:Person { name: $person1_name }) "
-            "CREATE (p2:Person { name: $person2_name }) "
-            "CREATE (p1)-[k:KNOWS { from: $knows_from }]->(p2) "
+            "MERGE (p1:Person { name: $person1_name }) "
+            "MERGE (p2:Person { name: $person2_name }) "
+            "MERGE (p1)-[k:KNOWS { from: $knows_from }]->(p2) "
             "RETURN p1, p2, k"
         )
         result = tx.run(query, person1_name=person1_name,
@@ -69,7 +69,7 @@ class App:
     @staticmethod
     def _find_and_return_person(tx, person_name):
         query = (
-            "MATCH (p:Person) "
+            "MERGE (p:Person) "
             "WHERE p.name = $person_name "
             "RETURN p.name AS name"
         )
