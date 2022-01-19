@@ -160,7 +160,7 @@ class MongoPoolCPPPC(object):
             ('_id', pymongo.DESCENDING)
         ])
         for item in cursor:
-            # item.pop('_id')
+            item.pop('_id')
             # prod = Product(**item)
             yield item
 
