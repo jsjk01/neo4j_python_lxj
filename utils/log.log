@@ -1,12 +1,69 @@
-2021-04-19 17:18:48 log.py [line:64] INFO: 状态信息
-2021-04-19 17:18:48 log.py [line:65] WARNING: 警告信息
-2021-04-19 17:18:48 log.py [line:66] CRITICAL: 严重错误信息
-2021-04-19 17:19:10 log.py [line:64] INFO: 状态信息
-2021-04-19 17:19:10 log.py [line:65] WARNING: 警告信息
-2021-04-19 17:19:10 log.py [line:66] ERROR: 错误信息
-2021-04-19 17:19:10 log.py [line:67] CRITICAL: 严重错误信息
-2021-04-19 17:30:46 log.py [line:61] DEBUG: 调试信息
-2021-04-19 17:30:46 log.py [line:62] INFO: 状态信息
-2021-04-19 17:30:46 log.py [line:63] WARNING: 警告信息
-2021-04-19 17:30:46 log.py [line:64] ERROR: 错误信息
-2021-04-19 17:30:46 log.py [line:65] CRITICAL: 严重错误信息
+import random
+import time
+from multiprocessing import Queue, Process
+import redis
+import requests
+
+from db.base_class import NSFCProjectDetail20220118
+from db.mongo_pool import MongoPoolNsfcDetail20220118, MongoPoolNewNsfc
+from utils.http_headers import get_request_headers
+
+mongo_detail = MongoPoolNsfcDetail20220118()
+pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
+r = redis.Redis(connection_pool=pool)
+
+
+def insert_from_url(url):
+    print('insert', end=' ')
+    try:
+        mongo_detail.insert_one(NSFCProjectDetail20220118(
+            **requests.get(url=url,
+                           headers=get_request_headers()).json()['data']))
+    except Exception as e:
+        # 出错的信息存起来
+        with open('wrong_20220123.txt', 'a') as f_in:
+            f_in.write(url + '\n' + str(e))
+    time.sleep(random.randint(1, 2) + 0.15)
+
+
+def main():
+    if len(r.lrange('process_list', 0, -1)) == 0:
+        mongo = MongoPoolNewNsfc()
+        print('加载索引数据库。。。。。。')
+        in_progress_data = mongo.find_all()
+        print('关闭 mongo 连接')
+        mongo.client.close()
+        print('加载当前详情数据库。。。。。。')
+        mongo_detail_now_data = mongo_detail.find_all()
+        mongo_detail_now_data_clean = [i for i in mongo_detail_now_data]
+        print(mongo_detail_now_data_clean[0])
+        process_list = []
+        # in_progress_data.reverse()
+        data_length = len(in_progress_data)
+
+        for data_index, _ in enumerate(in_progress_data):
+            print(f'{round(((data_index + 1) / data_length), 2)} %', end=' - ')
+            if _.批准号 in mongo_detail_now_data_clean:
+                print(time.strftime("%Y-%m-%d %X", time.localtime()), end=' - ')
+                print('pass')
+            else:
+                # if not mongo_detail.check_with_ratify(_.批准号):
+                #     continue
+                url = "https://kd.nsfc.gov.cn/api/baseQuery/conclusionProjectInfo/" + _.链接
+
+                process_list.append(url)
+                r.lpush('process_list', url)
+                print(time.strftime("%Y-%m-%d %X", time.localtime()), end=' - ')
+                print('add')
+
+    temp_list = []
+    while len(r.lrange('process_list', 0, -1)) != 0:
+        insert_from_url(r.lpop('process_list'))
+
+    mongo_detail.client.close()
+
+
+if __name__ == '__main__':
+    process_list = []
+    q = Queue()
+    main()
